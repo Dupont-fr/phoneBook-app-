@@ -1,34 +1,68 @@
-import Hello from './component/hello'
+import { useState } from 'react'
+import Filter from './components/Filter'
+import PersonForm from './components/PersonForm'
+import Persons from './components/Persons'
+import axios from 'axios'
+import { useEffect } from 'react'
 
 const App = () => {
-  const friends = [
-    {
-      name: 'peter',
-      age: 20,
-      sexe: 'Masculin',
-    },
-    {
-      name: 'paul',
-      age: 22,
-      sexe: 'Masculin',
-    },
-  ]
-  console.log('Hello from component')
+  const [persons, setPersons] = useState([])
+  const [newName, setNewName] = useState('')
+  const [newNumber, setNewNumber] = useState('')
+  const [filter, setFilter] = useState('')
+
+  const handleNameChange = (event) => {
+    setNewName(event.target.value)
+  }
+  const handleNumberChange = (event) => setNewNumber(event.target.value)
+  const handleFilterChange = (event) => setFilter(event.target.value)
+
+  const addPerson = (event) => {
+    event.preventDefault()
+    const nameExists = persons.some(
+      (person) => person.name.toLowerCase() === newName.toLowerCase()
+    )
+    if (nameExists) {
+      alert(`${newName} Est deja ajouter sur PhoneBook`)
+      return
+    }
+    const newPerson = { name: newName, number: newNumber }
+    setPersons(persons.concat(newPerson))
+    setNewName('')
+    setNewNumber('')
+  }
+
+  const personsToShow = filter
+    ? persons.filter((person) =>
+        person.name.toLowerCase().includes(filter.toLowerCase())
+      )
+    : persons
+
+  useEffect(() => {
+    axios
+      .get('http://localhost:3000/persons')
+      .then((response) => {
+        setPersons(response.data)
+      })
+      .catch((error) => console.log(error))
+  }, [])
   return (
     <div>
-      <h1>greeting</h1>
+      <h2>Phonebook</h2>
 
-      <Hello name='jhon' age={20} ville='Dschang' pays='Cameroun' />
-      <Hello name='peter' age={23} ville='Yaounde' pays='Cameroun' />
-      <Hello name='Dupont' age={20} ville='Douala' pays='Cameroun' />
-      <Hello name='alesxr' age={123} ville='Bafoussam' pays='Cameroun' />
+      <Filter value={filter} onChange={handleFilterChange} />
 
-      <p>
-        {friends[0].name} age: {friends[0].age} ans, sexe: {friends[0].sexe}
-      </p>
-      <p>
-        {friends[1].name} age: {friends[1].age} ans, sexe: {friends[1].sexe}
-      </p>
+      <h3>Add a new</h3>
+      <PersonForm
+        onSubmit={addPerson}
+        newName={newName}
+        handleNameChange={handleNameChange}
+        newNumber={newNumber}
+        handleNumberChange={handleNumberChange}
+      />
+
+      <h3>Numbers</h3>
+      <Persons persons={personsToShow} />
     </div>
   )
 }
