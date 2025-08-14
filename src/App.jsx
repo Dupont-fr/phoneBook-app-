@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
-
+import './index.css'
 import personService from './services/persons'
+import MessageNotification from './components/MessageNotification'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
+
+  const [message, setMessage] = useState(null)
   const [filter, setFilter] = useState('')
 
   useEffect(() => {
@@ -55,10 +58,22 @@ const App = () => {
             )
             setNewName('')
             setNewNumber('')
+            setMessage({
+              text: `Mise à jour du numéro ${returnedPerson.name}`,
+              type: 'success',
+            })
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
           })
-          .catch((error) => console.error(error))
+          .catch((error) => {
+            setMessage({ text: 'Erreur lors de la mise à jour', type: 'error' })
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
+          })
 
-        return // On arrête ici pour éviter l'ajout
+        return
       }
     }
 
@@ -69,6 +84,13 @@ const App = () => {
         setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
+        setMessage({
+          text: `${returnedPerson.name} est  ajouté`,
+          type: 'success',
+        })
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)
       })
       .catch((error) => console.error(error))
   }
@@ -82,8 +104,23 @@ const App = () => {
           .deletePerson(id)
           .then((returnedPerson) => {
             setPersons(persons.filter((person) => person.id !== id))
+            setMessage({
+              text: `${existingPerson.name} est Supprimé`,
+              type: 'success',
+            })
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
           })
-          .catch((error) => console.error(error))
+          .catch((error) => {
+            setMessage({
+              text: `Information of ${existingPerson.name} has already been removed from server`,
+              type: 'error',
+            })
+            setTimeout(() => {
+              setMessage(null)
+            }, 5000)
+          })
       }
     }
   }
@@ -97,7 +134,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-
+      <MessageNotification message={message} />
       <Filter value={filter} onChange={handleFilterChange} />
 
       <h3>Add a new</h3>
